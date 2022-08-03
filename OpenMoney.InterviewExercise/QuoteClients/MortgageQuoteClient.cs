@@ -1,15 +1,14 @@
+using System;
 using System.Linq;
+using System.Threading.Tasks;
+using OpenMoney.InterviewExercise.CustomExceptions.MortgageException;
 using OpenMoney.InterviewExercise.Models;
 using OpenMoney.InterviewExercise.Models.Quotes;
+using OpenMoney.InterviewExercise.QuoteClients.Interfaces;
 using OpenMoney.InterviewExercise.ThirdParties;
 
 namespace OpenMoney.InterviewExercise.QuoteClients
 {
-    public interface IMortgageQuoteClient
-    {
-        MortgageQuote GetQuote(GetQuotesRequest getQuotesRequest);
-    }
-
     public class MortgageQuoteClient : IMortgageQuoteClient
     {
         private readonly IThirdPartyMortgageApi _api;
@@ -19,44 +18,43 @@ namespace OpenMoney.InterviewExercise.QuoteClients
             _api = api;
         }
         
-        public MortgageQuote GetQuote(GetQuotesRequest getQuotesRequest)
+        public async Task<MortgageQuote> GetQuote(GetQuotesRequest getQuotesRequest)
         {
-            // check if mortgage request is eligible
-            var loanToValueFraction = getQuotesRequest.Deposit / getQuotesRequest.HouseValue;
-            if (loanToValueFraction < 0.1d)
+            try
             {
-                return null;
-            }
-            
-            var mortgageAmount = getQuotesRequest.Deposit - getQuotesRequest.HouseValue;
-            
-            var request = new ThirdPartyMortgageRequest
-            {
-                MortgageAmount = (decimal) mortgageAmount
-            };
+                // check if mortgage request is eligible
+                var loanToValueFraction = getQuotesRequest.Deposit / getQuotesRequest.HouseValue;
 
-            var response = _api.GetQuotes(request).GetAwaiter().GetResult().ToArray();
+                if (loanToValueFraction < 0.1d)
+                    return null;
 
-            ThirdPartyMortgageResponse cheapestQuote = null;
+                var mortgageAmount = getQuotesRequest.HouseValue - getQuotesRequest.Deposit;
             
-            for (var i = 0; i < response.Length; i++)
-            {
-                var quote = response[i];
-
-                if (cheapestQuote == null)
+                var request = new ThirdPartyMortgageRequest
                 {
-                    cheapestQuote = quote;
-                }
-                else if (cheapestQuote.MonthlyPayment > quote.MonthlyPayment)
+                    MortgageAmount = (decimal) mortgageAmount
+                };
+
+                var response = await _api.GetQuotes(request);
+
+                if (response == null)
+                    throw new MortgageException("No response from mortgage client");
+
+                var cheapestQuote = response.OrderBy(x => x.MonthlyPayment)
+                    .FirstOrDefault();
+
+                var mortgageQuote = new MortgageQuote
                 {
-                    cheapestQuote = quote;
-                }
+                    MonthlyPayment = (float) cheapestQuote.MonthlyPayment
+                };
+
+                return mortgageQuote;
             }
-            
-            return new MortgageQuote
+            catch (MortgageException e)
             {
-                MonthlyPayment = (float) cheapestQuote.MonthlyPayment
-            };
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }
