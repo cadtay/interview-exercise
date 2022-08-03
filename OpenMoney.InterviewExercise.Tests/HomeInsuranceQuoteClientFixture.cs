@@ -14,7 +14,7 @@ namespace OpenMoney.InterviewExercise.Tests
         private readonly Mock<IThirdPartyHomeInsuranceApi> _apiMock = new();
         
         [Fact]
-        public async Task GetQuote_ShouldReturnNull_IfHouseValue_Over10Mill()
+        public async Task GetQuote_ShouldReturnErrorMessage_IfHouseValue_Over10Mill()
         {
             const float houseValue = 10_000_001;
             
@@ -24,7 +24,8 @@ namespace OpenMoney.InterviewExercise.Tests
                 HouseValue = houseValue
             });
             
-            Assert.Null(quote);
+            Assert.NotNull(quote.ErrorMessage);
+            Assert.False(quote.IsResponseSuccess);
         }
 
         [Fact]

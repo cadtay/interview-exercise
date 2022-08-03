@@ -22,11 +22,17 @@ namespace OpenMoney.InterviewExercise.QuoteClients
         {
             try
             {
+                var mortgageQuote = new MortgageQuote();
+                
                 // check if mortgage request is eligible
                 var loanToValueFraction = getQuotesRequest.Deposit / getQuotesRequest.HouseValue;
 
                 if (loanToValueFraction < 0.1d)
-                    return null;
+                {
+                    mortgageQuote.ErrorMessage = "Loan to fraction value is less than 0.1";
+                    mortgageQuote.IsResponseSuccess = false;
+                    return mortgageQuote;
+                }
 
                 var mortgageAmount = getQuotesRequest.HouseValue - getQuotesRequest.Deposit;
             
@@ -43,10 +49,7 @@ namespace OpenMoney.InterviewExercise.QuoteClients
                 var cheapestQuote = response.OrderBy(x => x.MonthlyPayment)
                     .FirstOrDefault();
 
-                var mortgageQuote = new MortgageQuote
-                {
-                    MonthlyPayment = (float) cheapestQuote.MonthlyPayment
-                };
+                mortgageQuote.MonthlyPayment = (float) cheapestQuote.MonthlyPayment;
 
                 return mortgageQuote;
             }

@@ -24,9 +24,15 @@ namespace OpenMoney.InterviewExercise.QuoteClients
         {
             try
             {
+                var homeInsuranceQuote = new HomeInsuranceQuote();
+                
                 // check if request is eligible
                 if (getQuotesRequest.HouseValue > 10_000_000d)
-                    return null;
+                {
+                    homeInsuranceQuote.ErrorMessage = "House value exceeds 10 million";
+                    homeInsuranceQuote.IsResponseSuccess = false;
+                    return homeInsuranceQuote;
+                }
 
                 var request = new ThirdPartyHomeInsuranceRequest
                 {
@@ -43,11 +49,8 @@ namespace OpenMoney.InterviewExercise.QuoteClients
 
                 var cheapestQuote = response.OrderBy(x => x.MonthlyPayment)
                     .FirstOrDefault();
-
-                var homeInsuranceQuote = new HomeInsuranceQuote
-                {
-                    MonthlyPayment = cheapestQuote.MonthlyPayment
-                };
+                
+                homeInsuranceQuote.MonthlyPayment = cheapestQuote.MonthlyPayment;
 
                 return homeInsuranceQuote;
             }
