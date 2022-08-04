@@ -54,7 +54,7 @@ namespace OpenMoney.InterviewExercise.QuoteClients
 
                 return homeInsuranceQuote;
             }
-            catch (HomeInsuranceException e)
+            catch (Exception e)
             {
                 //Need to add logging instead of Console.WriteLine
                 Console.WriteLine(e);

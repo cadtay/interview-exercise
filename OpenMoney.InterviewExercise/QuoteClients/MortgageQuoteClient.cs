@@ -53,7 +53,7 @@ namespace OpenMoney.InterviewExercise.QuoteClients
 
                 return mortgageQuote;
             }
-            catch (MortgageException e)
+            catch (Exception e)
             {
                 Console.WriteLine(e);
                 throw;
